@@ -13,7 +13,7 @@ pipeline{
                 }
             }
             steps {
-                sh 'trufflehog filesystem . --fail'
+                sh 'trufflehog filesystem --no-verification . --fail'
             }
         }   
     }
