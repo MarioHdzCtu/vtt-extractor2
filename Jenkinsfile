@@ -9,7 +9,7 @@ pipeline{
                 docker {
                     image 'trufflesecurity/trufflehog:latest'
                     label 'ubuntu-agent'
-                    args '-u root'
+                    args '-u root --entrypoint=""'
                 }
             }
             steps {
