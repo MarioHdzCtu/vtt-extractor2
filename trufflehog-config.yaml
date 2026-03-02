@@ -6,6 +6,9 @@ detectors:
       - password
       - PASSWORD
       - psw
+      - key
+      - apikey
+      - APIKEY
     regex:
       # The capture group (inside the parentheses) is what gets flagged as the secret
-      token: '(?i)(?:password|psw)\s*=\s*([a-zA-Z0-9_!@#$%^&*]+)'
+      token: '(?i)(?:password|psw)\s*=\s*([a-zA-Z0-9_!@#$%^&*]+)(APIKEY_[A-Za-z]+)([A-Za-z]+_APIKEY)'
