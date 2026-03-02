@@ -1,0 +1,11 @@
+detectors:
+  - name: GenericPasswordEnv
+    # Keywords act as a fast-filter. TruffleHog only runs the heavy regex 
+    # if it sees one of these words on the line first.
+    keywords:
+      - password
+      - PASSWORD
+      - psw
+    regex:
+      # The capture group (inside the parentheses) is what gets flagged as the secret
+      token: '(?i)(?:password|psw)\s*=\s*([a-zA-Z0-9_!@#$%^&*]+)'

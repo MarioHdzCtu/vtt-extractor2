@@ -1,9 +1,10 @@
 repos:
   - repo: https://github.com/trufflesecurity/trufflehog
     # Use the main branch or pin to a specific release tag
-    rev: main 
+    rev: v3.93.6 
     hooks:
       - id: trufflehog
+        pass_filenames: false
         # We override the default entry command so it uses your custom config 
         # and doesn't silently ignore unverified local passwords
         entry: trufflehog git file://. --since-commit HEAD --no-verification --config=trufflehog-config.yaml --fail
