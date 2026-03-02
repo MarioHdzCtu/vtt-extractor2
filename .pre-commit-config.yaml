@@ -8,3 +8,11 @@ repos:
         # We override the default entry command so it uses your custom config 
         # and doesn't silently ignore unverified local passwords
         entry: trufflehog git file://. --since-commit HEAD --no-verification --config=trufflehog-config.yaml --fail
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    # We will use autoupdate to lock in the latest version again
+    rev: v4.4.0 
+    hooks:
+      - id: conventional-pre-commit
+        # This tells pre-commit to only run this hook during the commit message phase
+        stages: [commit-msg]
