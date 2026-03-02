@@ -1,0 +1,173 @@
+//Jenkinsfile
+
+def projectChanged = false;
+
+pipeline{
+    agent none
+
+    environment{
+        SERVER_HOST = '192.168.1.197'
+        DOCKER_REGISTRY = '192.168.1.197:5000'
+        DOCKER_IMAGE_NAME = "${DOCKER_REGISTRY}/miconsul-php-${env.BRANCH_NAME}"
+        DOCKER_CONTAINER_NAME = "miconsul-php-container-${env.BRANCH_NAME}"
+    }
+    triggers { pollSCM('H/1 * * * *')} // Poll this branch every 1 minute
+
+    stages {
+        stage("Checkout"){
+            steps{
+                script{
+                    echo "Checkout the application for env ${env.BRANCH_NAME}"
+                    echo "Checking if config.toml file was changed..."
+                    def changedFiles = sh(script: "git diff --name-only HEAD HEAD~1", returnStdout: true).trim().split('\n')
+                    projectChanged = changedFiles.contains('config.toml')
+    
+                    if (!projectChanged){
+                        echo "No changes were made to config.toml file. Exiting pipeline..."
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    } else {
+                        echo "Detected change in config.toml. Proceeding with the pipeline..."
+                    }
+                }
+            }
+        }
+        stage("Get pipeline secrets"){
+            when {expression { projectChanged }}
+            steps{
+                script{
+
+                    echo 'Getting the branch name for retrieving secrets'
+                    def branch = env.BRANCH_NAME
+                    echo "Found branch: ${branch}"
+                    if (branch in ['dev', 'uat', 'main']) {
+                        branch = branch
+                    } else {
+                        echo 'Feature branch detected, using dev for secrets'
+                        branch = 'dev'
+                    }
+                
+                    echo "Retrieving the secrets for branch: ${branch}"
+
+                    withCredentials([
+                        string(credentialsId: "MYSQL_HOST-${branch}", variable: 'MYSQL_HOST'),
+                        string(credentialsId: "MYSQL_USER-${branch}", variable: 'MYSQL_USER'),
+                        string(credentialsId: "MYSQL_PASSWORD-${branch}", variable: 'MYSQL_PASSWORD'),
+                        string(credentialsId: "MYSQL_DB-${branch}", variable: 'MYSQL_DB'),
+                        string(credentialsId: "MYSQL_ROOT_PASSWORD-${branch}", variable: 'MYSQL_ROOT_PASSWORD'),
+                    ]){
+                        // Export as environment variables for use in shell
+                        env.MYSQL_HOST = MYSQL_HOST
+                        env.MYSQL_USER = MYSQL_USER
+                        env.MYSQL_PASSWORD = MYSQL_PASSWORD
+                        env.MYSQL_DB = MYSQL_DB
+                        env.MYSQL_ROOT_PASSWORD = MYSQL_ROOT_PASSWORD
+                    }
+                    echo 'Retrieved secrets for pipeline'
+                    
+                    
+                }
+            }
+        }
+        stage("Get Env and define dynamic variables"){
+            when {expression { projectChanged }}
+            steps{
+                script{
+                    def branch = env.BRANCH_NAME
+                    def branch_name;
+                    def php_container_name;
+                    def php_contaier_args;
+                    def php_container_port = 0;
+                    def network_name;
+
+                    switch(branch) {
+                        case 'main':
+                            branch_name = "prod"
+                            php_container_port = 9000
+                            network_name = "miconsul"
+                            break
+                        case 'uat':
+                            branch_name = "uat"
+                            php_container_port = 8000
+                            network_name = "miconsul-uat"
+                            break
+                        case 'dev':
+                            branch_name = "dev"
+                            php_container_port = 7000
+                            network_name = "miconsul-dev"
+                            break
+                        default:
+                            echo "Found feature branch: ${branch}. Setting random port"
+                            branch_name = branch
+                            php_container_port = 10000
+                            
+                    }
+                    env.PHP_CONTAINER_ARGS = "--name ${DOCKER_CONTAINER_NAME} -d --restart unless-stopped -p ${php_container_port}:80 --network ${network_name} -e MYSQL_HOST=${env.MYSQL_HOST} -e MYSQL_USER=${env.MYSQL_USER} -e MYSQL_PASSWORD=${env.MYSQL_PASSWORD} -e MYSQL_DB=${env.MYSQL_DB}"
+                    
+                    echo "Defined container name: ${DOCKER_CONTAINER_NAME}"
+                    echo "Defined container args as: ${env.PHP_CONTAINER_ARGS}"
+                }
+            }
+        }
+        stage("Extract Version"){
+            when {expression { projectChanged }}
+            steps{
+                script{
+                    env.VERSION = sh(
+                        script: 'grep "version" config.toml | cut -d\'=\' -f2 | tr -d \' "\'', 
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "Detected version: ${env.VERSION}"
+                }
+            }
+        }
+        stage("Build"){
+            when {expression { projectChanged }}
+            steps{
+                script{
+                    echo "Building docker image for env ${env.BRANCH_NAME}"
+                    def appImage = docker.build("${DOCKER_IMAGE_NAME}:${env.VERSION}")
+                    echo 'Building complete'
+                    echo 'Pushing docker image to registry'
+                    docker.withRegistry("http://${DOCKER_REGISTRY}"){
+                        appImage.push()
+                        appImage.push('latest')
+                    }
+                    echo 'Image pushed successfully'
+                }
+            }
+        }
+        stage("Deploy"){
+            when {expression { projectChanged }}
+            steps{
+                
+                script{
+                    withCredentials([
+                            sshUserPrivateKey(
+                                credentialsId: 'server-ssh-credential',
+                                usernameVariable: 'SSH_USER',
+                                keyFileVariable: 'DUMMY_PATH'
+                            )
+                    ]){
+                        sshagent(credentials: ['server-ssh-credential']){
+                            sh """
+                                mkdir -p ~/.ssh
+                                ssh-keyscan -H ${SERVER_HOST} >> ~/.ssh/known_hosts 
+                                
+                                # SSH to the remote server, interpolating all necessary variables
+                                ssh ${env.SSH_USER}@${SERVER_HOST} "
+                                    docker stop ${DOCKER_CONTAINER_NAME} || true
+                                    docker rm ${DOCKER_CONTAINER_NAME} || true
+                                    docker image rm ${DOCKER_IMAGE_NAME}
+                                    docker pull ${DOCKER_IMAGE_NAME}
+                                    docker run ${env.PHP_CONTAINER_ARGS} ${DOCKER_IMAGE_NAME}
+                                "
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
