@@ -1,5 +1,5 @@
 pipeline{
-    agent none
+    agent { label 'ubuntu-agent' }
 
     stages {
         stage('Dependency Security Scan') {
