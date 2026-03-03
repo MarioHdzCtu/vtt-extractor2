@@ -30,22 +30,12 @@ pipeline{
             }
         }
         stage('Vulnerability Scan (Grype)') {
-            agent {
-                docker {
-                    // Using the official Grype image
-                    image 'anchore/grype:latest'
-                    // We run as root to ensure it can read all files in the workspace
-                    args '-u 0:0 --entrypoint=""'
-                    reuseNode true 
-                }
-            }
+            // We use the node's shell instead of a Docker agent
             steps {
-                sh """
-                # Scan the current directory (the root of your repo)
-                # --fail-on high: This tells Jenkins to BREAK the build if 
-                # any High or Critical vulnerabilities are found.
-                grype . --fail-on high
-                """
+                script {
+                    // This command runs the container once, performs the scan, and disappears
+                    sh "docker run --rm -v ${WORKSPACE}:/src -w /src anchore/grype:latest . --fail-on high"
+                }
             }
         }
         stage('Unit Tests & Coverage') {
