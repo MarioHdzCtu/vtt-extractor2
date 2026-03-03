@@ -3,6 +3,9 @@ pipeline{
 
     stages {
         stage('Dependency Security Scan') {
+            environment {
+                SAFETY_API_KEY = credentials('safety-api-key')
+            }
             agent {
                 docker {
                     image 'python:3.13-slim'
