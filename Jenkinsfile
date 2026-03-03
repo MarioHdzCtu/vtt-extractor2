@@ -5,7 +5,7 @@ pipeline{
         stage('Dependency Security Scan') {
             agent {
                 docker {
-                    image 'python:3.12-slim'
+                    image 'python:3.13-slim'
                     args '-u root --entrypoint=""'
                     reuseNode true 
                 }
@@ -27,7 +27,7 @@ pipeline{
         stage('Unit Tests & Coverage') {
             agent {
                 docker {
-                    image 'python:3.12-slim'
+                    image 'python:3.13-slim'
                     args '-u root --entrypoint=""'
                     reuseNode true 
                 }
