@@ -1,6 +1,6 @@
-def main():
-    print("Hello from vtt-extractor!")
+def my_sum(x: int, y: int):
+    return x + y
 
 
 if __name__ == "__main__":
-    main()
+    my_sum()
