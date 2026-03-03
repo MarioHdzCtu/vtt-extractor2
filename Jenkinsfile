@@ -1,8 +1,6 @@
 pipeline{
     agent none
 
-    triggers { pollSCM('H/1 * * * *')} // Poll this branch every 1 minute
-
     stages {
         stage('SonarQube SAST Analysis') {
             agent {
