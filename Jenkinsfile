@@ -15,6 +15,7 @@ pipeline{
                 withSonarQubeEnv('SonarQube') {
                     sh """
                     pwd
+                    ls
                     cd vtt-extractor2
                     sonar-scanner \
                       -Dsonar.projectKey=vtt-extractor2 \
