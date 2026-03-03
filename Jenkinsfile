@@ -39,8 +39,7 @@ pipeline{
                 uv sync
                 
                 # Run the tests and generate the coverage.xml file
-                # Replace 'mypackage' with your actual Python folder name, or use '.' for the whole repo
-                uv run pytest --cov=main --cov-report=xml
+                uv run pytest --cov=. --cov-report=xml
                 """
             }
         }
