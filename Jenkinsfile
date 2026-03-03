@@ -12,7 +12,7 @@ pipeline{
                 }
             }
             environment {
-                SAFETY_API_KEY = credentials('safety-api-key')
+                SAFETY_API_KEY = credentials('SafetyAPIKey')
             }
             steps {
                 // This echo confirms we are actually INSIDE the step
