@@ -35,7 +35,7 @@ pipeline{
                     // Using the official Grype image
                     image 'anchore/grype:latest'
                     // We run as root to ensure it can read all files in the workspace
-                    args '-u root --entrypoint=""'
+                    args '-u 0:0 --entrypoint=""'
                     reuseNode true 
                 }
             }
