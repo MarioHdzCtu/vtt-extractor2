@@ -34,7 +34,7 @@ pipeline{
             steps {
                 script {
                     // This command runs the container once, performs the scan, and disappears
-                    sh "docker run --rm -v ${WORKSPACE}:/src -w /src anchore/grype:latest . --fail-on high"
+                    sh "docker run --rm -v ${WORKSPACE} -w /src anchore/grype:latest . --fail-on high"
                 }
             }
         }
