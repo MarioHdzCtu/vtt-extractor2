@@ -23,7 +23,7 @@ pipeline{
                 
                 # Run the scan. If vulnerabilities are found, this returns a non-zero exit code
                 # and Jenkins will immediately turn the stage red and fail the pipeline.
-                safety scan --key \$SAFETY_API_KEY -r exported-requirements.txt --full-report
+                safety scan --key \$SAFETY_API_KEY -r exported-requirements.txt --full-report --non-interactive
                 """
             }
         }
