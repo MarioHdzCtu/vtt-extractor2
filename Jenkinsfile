@@ -21,15 +21,11 @@ pipeline{
                     set -x
                     # Check if uv is already there, otherwise install
                     pip install uv safety --quiet
-                    
-                    # Verify we are in the right folder
-                    ls -la
-                    
                     # Export and scan
                     uv export --format requirements-txt > exported-requirements.txt
                     
                     # Use 'check' instead of 'scan' (check is the standard command for requirements files)
-                    safety check --key \$SAFETY_API_KEY -r exported-requirements.txt --full-report --non-interactive
+                    safety check --key \$SAFETY_API_KEY -r exported-requirements.txt --full-report
                 """
             }
         }
