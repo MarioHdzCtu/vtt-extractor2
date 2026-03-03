@@ -3,27 +3,33 @@ pipeline{
 
     stages {
         stage('Dependency Security Scan') {
-            environment {
-                SAFETY_API_KEY = credentials('safety-api-key')
-            }
             agent {
                 docker {
                     image 'python:3.13-slim'
-                    args '-u root --entrypoint=""'
+                    // Ensure the container has the right permissions to see the workspace
+                    args '-u root:root --entrypoint=""'
                     reuseNode true 
                 }
             }
+            environment {
+                SAFETY_API_KEY = credentials('safety-api-key')
+            }
             steps {
+                // This echo confirms we are actually INSIDE the step
+                echo "Starting Safety Scan..." 
                 sh """
-                # Install uv and safety
-                pip install uv safety
-                
-                # Export the completely resolved, locked dependencies into a format Safety understands
-                uv export --format requirements-txt > exported-requirements.txt
-                
-                # Run the scan. If vulnerabilities are found, this returns a non-zero exit code
-                # and Jenkins will immediately turn the stage red and fail the pipeline.
-                safety scan --key \$SAFETY_API_KEY -r exported-requirements.txt --full-report --non-interactive
+                    set -x
+                    # Check if uv is already there, otherwise install
+                    pip install uv safety --quiet
+                    
+                    # Verify we are in the right folder
+                    ls -la
+                    
+                    # Export and scan
+                    uv export --format requirements-txt > exported-requirements.txt
+                    
+                    # Use 'check' instead of 'scan' (check is the standard command for requirements files)
+                    safety check --key \$SAFETY_API_KEY -r exported-requirements.txt --full-report --non-interactive
                 """
             }
         }
