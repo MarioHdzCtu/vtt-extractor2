@@ -14,6 +14,7 @@ pipeline{
                 // Ensure 'SonarQube' exactly matches the name in your Jenkins System configuration
                 withSonarQubeEnv('SonarQube') {
                     sh """
+                    pwd
                     cd vtt-extractor2
                     sonar-scanner \
                       -Dsonar.projectKey=vtt-extractor2 \
