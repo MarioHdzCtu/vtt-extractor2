@@ -2,27 +2,7 @@ pipeline{
     agent none
 
     stages {
-        stage('SonarQube SAST Analysis') {
-            agent {
-                docker {
-                    image 'sonarsource/sonar-scanner-cli:latest'
-                    args '-u root --entrypoint=""'
-                    reuseNode true 
-                }
-            }
-            steps {
-                // Ensure 'SonarQube' exactly matches the name in your Jenkins System configuration
-                withSonarQubeEnv('SonarQube') {
-                    sh """
-                    sonar-scanner \
-                      -Dsonar.projectKey=vtt-extractor2 \
-                      -Dsonar.projectName=vtt-extractor2 \
-                      -Dsonar.sources=. 
-                    """
-                }
-            }
-        } 
-        stage('Unit Tests & Coverage') {
+                stage('Unit Tests & Coverage') {
             agent {
                 docker {
                     image 'python:3.12-slim'
@@ -43,6 +23,26 @@ pipeline{
                 """
             }
         }
+        stage('SonarQube SAST Analysis') {
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli:latest'
+                    args '-u root --entrypoint=""'
+                    reuseNode true 
+                }
+            }
+            steps {
+                // Ensure 'SonarQube' exactly matches the name in your Jenkins System configuration
+                withSonarQubeEnv('SonarQube') {
+                    sh """
+                    sonar-scanner \
+                      -Dsonar.projectKey=vtt-extractor2 \
+                      -Dsonar.projectName=vtt-extractor2 \
+                      -Dsonar.sources=. 
+                    """
+                }
+            }
+        } 
         stage('Quality Gate Check') {
             steps {
                 // Prevent the pipeline from hanging forever if the webhook fails to arrive
