@@ -14,10 +14,10 @@ pipeline{
                 // Ensure 'SonarQube' exactly matches the name in your Jenkins System configuration
                 withSonarQubeEnv('SonarQube') {
                     sh """
-                    cd ${PROJECT_NAME}
+                    cd vtt-extractor
                     sonar-scanner \
-                      -Dsonar.projectKey=${PROJECT_NAME} \
-                      -Dsonar.projectName=${PROJECT_NAME} \
+                      -Dsonar.projectKey=vtt-extractor \
+                      -Dsonar.projectName=vtt-extractor \
                       -Dsonar.sources=. 
                     """
                 }
