@@ -2,7 +2,29 @@ pipeline{
     agent none
 
     stages {
-                stage('Unit Tests & Coverage') {
+        stage('Dependency Security Scan') {
+            agent {
+                docker {
+                    image 'python:3.12-slim'
+                    args '-u root --entrypoint=""'
+                    reuseNode true 
+                }
+            }
+            steps {
+                sh """
+                # Install uv and safety
+                pip install uv safety
+                
+                # Export the completely resolved, locked dependencies into a format Safety understands
+                uv export --format requirements-txt > exported-requirements.txt
+                
+                # Run the scan. If vulnerabilities are found, this returns a non-zero exit code
+                # and Jenkins will immediately turn the stage red and fail the pipeline.
+                safety check -r exported-requirements.txt --full-report
+                """
+            }
+        }
+        stage('Unit Tests & Coverage') {
             agent {
                 docker {
                     image 'python:3.12-slim'
