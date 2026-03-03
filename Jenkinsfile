@@ -38,7 +38,8 @@ pipeline{
                     sonar-scanner \
                       -Dsonar.projectKey=vtt-extractor2 \
                       -Dsonar.projectName=vtt-extractor2 \
-                      -Dsonar.sources=. 
+                      -Dsonar.sources=. \
+                      -Dsonar.python.coverage.reportPaths=coverage.xml
                     """
                 }
             }

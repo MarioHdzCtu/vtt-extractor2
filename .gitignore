@@ -11,3 +11,4 @@ wheels/
 
 #pytest
 .coverage
+coverage.xml
