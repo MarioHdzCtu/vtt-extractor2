@@ -70,13 +70,12 @@ pipeline{
             steps {
                 // Ensure 'SonarQube' exactly matches the name in your Jenkins System configuration
                 withSonarQubeEnv('SonarQube') {
-                    sh """
+                    sh '
                     sonar-scanner \
                       -Dsonar.projectKey=vtt-extractor2 \
                       -Dsonar.projectName=vtt-extractor2 \
                       -Dsonar.sources=. \
-                      -Dsonar.python.coverage.reportPaths=coverage.xml
-                    """
+                      -Dsonar.python.coverage.reportPaths=coverage.xml'
                 }
             }
         } 
